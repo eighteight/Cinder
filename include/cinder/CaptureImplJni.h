@@ -39,6 +39,7 @@ public:
 	virtual ~CaptureImplJni();
 
 	void 				start();
+    void                startTorch();
 	void 				stop();
 
 	bool				isCapturing() const;

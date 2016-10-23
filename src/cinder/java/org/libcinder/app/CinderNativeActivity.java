@@ -351,6 +351,31 @@ public class CinderNativeActivity extends NativeActivity {
             mCamera.startCapture(deviceId, width, height);
         }
     }
+    public void hardware_camera_startTorch(final String deviceId, final int width, final int height) {
+        //public void hardware_camera_startCapture() {
+        Log.i(TAG, "hardware_camera_startTorch");
+        
+        //if(null == mCamera) {
+        //    return;
+        //}
+        
+        if(1 != Thread.currentThread().getId()) {
+            final ConditionVariable condition = new ConditionVariable(false);
+            final CinderNativeActivity activity = this;
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    //mCamera = Camera.create(Build.VERSION_CODES.KITKAT, activity);
+                    mCamera.startTorch(deviceId, width, height);
+                    condition.open();
+                }
+            });
+            condition.block();
+        }
+        else {
+            mCamera.startTorch(deviceId, width, height);
+        }
+    }
 
     /**
      * hardware_camera_stopCapture

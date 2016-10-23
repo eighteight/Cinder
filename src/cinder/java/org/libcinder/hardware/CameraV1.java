@@ -210,7 +210,7 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
      *
      */
     private void startDevice(String deviceId) {
-        Log.i(TAG, "startDevice ENTER: ThreadID=" + Thread.currentThread().getId());
+        Log.i(TAG, "startDevice " + deviceId + " ENTER: ThreadID=" + Thread.currentThread().getId());
 
         if((null != mActiveDeviceId) && mActiveDeviceId.equals(deviceId)) {
             return;
@@ -225,7 +225,8 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
             mCamera = android.hardware.Camera.open(Integer.parseInt(mActiveDeviceId));
 
             Camera.Parameters params = mCamera.getParameters();
-
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            mCamera.setParameters(params);
             if((mPreferredPreviewWidth > 0) && (mPreferredPreviewHeight > 0)) {
                 params.setPreviewSize(mPreferredPreviewWidth, mPreferredPreviewHeight);
                 mCamera.setParameters(params);
@@ -273,6 +274,54 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
             Log.e(Cinder.TAG, "CinderCamera.stopDevice error: " + e.getMessage());
         }
     }
+
+    /** startTorch
+     *
+     */
+    private void startTorch(String deviceId) {
+        Log.i(TAG, "startDevice " + deviceId + " ENTER: ThreadID=" + Thread.currentThread().getId());
+
+        if((null != mActiveDeviceId) && mActiveDeviceId.equals(deviceId)) {
+            return;
+        }
+
+        if(null != mActiveDeviceId) {
+            stopDevice();
+        }
+
+        try {
+            mActiveDeviceId = deviceId;
+            mCamera = android.hardware.Camera.open(Integer.parseInt(mActiveDeviceId));
+
+            Camera.Parameters params = mCamera.getParameters();
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            mCamera.setParameters(params);
+            if((mPreferredPreviewWidth > 0) && (mPreferredPreviewHeight > 0)) {
+                params.setPreviewSize(mPreferredPreviewWidth, mPreferredPreviewHeight);
+                mCamera.setParameters(params);
+            }
+
+            setPreferredPreviewSize(params.getPreviewSize().width, params.getPreviewSize().height);
+
+            if(null == mDummyTexture) {
+                GLES20.glGenTextures(1, mDummyTextureHandle, 0);
+                Log.i(TAG, "Created mDummyTextureHandle: " + mDummyTextureHandle[0]);
+
+                mDummyTexture = new SurfaceTexture(mDummyTextureHandle[0]);
+                //mDummyTexture = new SurfaceTexture(0);
+                mDummyTexture.setDefaultBufferSize( params.getPreviewSize().width, params.getPreviewSize().height );
+            }
+
+            cameraSetPreviewTexture(mPreviewTexture);
+
+            Log.i(TAG, "Started Camera " + deviceId + ": res=" + getWidth() + "x" + getHeight() + ", fmt=NV21");
+        }
+        catch(Exception e ) {
+            Log.e(Cinder.TAG, "startDevice error: " + e.getMessage());
+        }
+
+    }
+
 
     /** startPreview
      *
@@ -471,6 +520,15 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
     @Override
     protected void startCaptureImpl(final String deviceId) {
         startCameraThread();
+    }
+
+    /**
+     * startTorchImpl
+     *
+     */
+    @Override
+    protected void startTorchImpl(final String deviceId) {
+        startTorch(deviceId);
     }
 
     /**

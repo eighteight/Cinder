@@ -188,6 +188,21 @@ void CaptureImplJni::start()
 		mCapturing = true;
 	}
 }
+    
+void CaptureImplJni::startTorch()
+{
+    //ci::android::hardware::Camera::getInstance()->startCapture( "0" );
+    
+    if( ! mDevice ) {
+        return;
+    }
+    
+    auto fullDevice = std::dynamic_pointer_cast<CaptureImplJni::Device>( mDevice );
+    if( fullDevice ) {
+        fullDevice->start(mWidth, mHeight);
+        mCapturing = true;
+    }
+}
 
 void CaptureImplJni::stop()
 {

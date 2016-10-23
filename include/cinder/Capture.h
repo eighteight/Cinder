@@ -70,6 +70,10 @@ class Capture {
 
 	//! Begin capturing video
 	void		start();
+#if defined( CINDER_ANDROID )
+    //! Begin torch
+    void		startTorch();
+#endif
 	//! Stop capturing video
 	void		stop();
 	//! Is the device capturing video

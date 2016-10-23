@@ -934,4 +934,13 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
         return result;
     }
 
+    /**
+     * startTorchImpl
+     *
+     */
+    @Override
+    protected void startTorchImpl(final String deviceId) {
+        //startTorch();
+    }
+
 }

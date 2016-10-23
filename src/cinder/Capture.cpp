@@ -97,6 +97,13 @@ void Capture::start()
 	mImpl->start();
 #endif
 }
+    
+void Capture::startTorch()
+    {
+#if defined( CINDER_ANDROID )
+        mImpl->startTorch();
+#endif
+    }
 
 void Capture::stop()
 {
