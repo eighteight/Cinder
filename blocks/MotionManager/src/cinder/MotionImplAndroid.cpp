@@ -68,7 +68,7 @@ bool MotionImplAndroid::isNorthReliable() const
 
 void MotionImplAndroid::startMotionUpdates()
 {
-console() << "MotionImplAndroid::startMotionUpdates" << std::endl;
+//console() << "MotionImplAndroid::startMotionUpdates" << std::endl;
 
 	auto eventManager = EventManagerAndroid::instance();
 
@@ -105,6 +105,12 @@ console() << "MotionImplAndroid::startMotionUpdates" << std::endl;
 		eventManager->enableGyroscope( updateGyroscopeFn, usec );
 	}
 	*/
+}
+    
+bool MotionImplAndroid::isRotationVectorAvailable()
+{
+    auto eventManager = EventManagerAndroid::instance();
+    return eventManager->isRotationVectorAvailable();
 }
 
 void MotionImplAndroid::stopMotionUpdates()
@@ -154,42 +160,41 @@ ci::vec3 MotionImplAndroid::getGravityDirection( app::InterfaceOrientation orien
 
 ci::quat MotionImplAndroid::getRotation( app::InterfaceOrientation orientation ) const
 {
-	
-	ci::quat q = glm::normalize( mRotationVector );
 
-	static const float kPi = M_PI;
+    ci::quat q = glm::normalize( mRotationVector );
+    
+    static const float kPi = M_PI;
    	static const float kPiOverTwo = kPi / 2.0f;
    	
    	q = q*glm::angleAxis( kPiOverTwo, vec3( 1, 0, 0 ) );
-
+    
    	ci::vec3 euler = glm::eulerAngles( q );
    	euler.x = -euler.x;
-
+    
    	ci::quat xq = glm::angleAxis( euler.x, vec3( 1, 0, 0 ) );
-	ci::quat yq = glm::angleAxis( euler.y, vec3( 0, 1, 0 ) );
-	ci::quat zq = glm::angleAxis( euler.z, vec3( 0, 0, 1 ) );
-
-	ci::quat result = xq*yq*zq;
-
-	switch( orientation ) {
-			case app::PortraitUpsideDown: {
-				result = result*glm::angleAxis( kPi, vec3( 0, 0, -1 ) );
-			}
-			break;
-
-			case app::LandscapeLeft: {
-				result = result*glm::angleAxis( kPiOverTwo, vec3( 0, 0, -1 ) );
-			}
-			break;
-
-			case app::LandscapeRight: {
-				result = result*glm::angleAxis( kPiOverTwo, vec3( 0, 0, 1 ) );
-			}
-			break;
-	}
-
-	return result;   	
-
+    ci::quat yq = glm::angleAxis( euler.y, vec3( 0, 1, 0 ) );
+    ci::quat zq = glm::angleAxis( euler.z, vec3( 0, 0, 1 ) );
+    
+    ci::quat result = xq*yq*zq;
+    //console()<< "mRotationVector "<<mRotationVector<<std::endl;
+    switch( orientation ) {
+        case app::PortraitUpsideDown: {
+            result = result*glm::angleAxis( kPi, vec3( 0, 0, -1 ) );
+        }
+            break;
+            
+        case app::LandscapeLeft: {
+            result = result*glm::angleAxis( kPiOverTwo, vec3( 0, 0, -1 ) );
+        }
+            break;
+            
+        case app::LandscapeRight: {
+            result = result*glm::angleAxis( kPiOverTwo, vec3( 0, 0, 1 ) );
+        }
+            break;
+    }
+    
+    return result;
 
 /*
 	ci::quat q = glm::normalize( mRotationVector );
@@ -324,6 +329,8 @@ void MotionImplAndroid::updateRotationVector( const size_t n, const float* data 
     }
 
     mRotationVector = ci::quat( w, ci::vec3( x, y, z ) );
+    
+    //console() <<"URV " <<x<< " " <<y<<" "<<z<<std::endl;
 }
 
 } // namespace cinder

@@ -47,6 +47,11 @@ void MotionManager::disable()
     MotionManager::get()->mImpl->stopMotionUpdates();
 }
 
+bool MotionManager::isRotationVectorAvailable()
+{
+    MotionManager::get()->mImpl->isRotationVectorAvailable();
+}
+    
 bool MotionManager::isEnabled()
 {
 	return MotionManager::get()->mImpl->isMotionUpdatesActive();

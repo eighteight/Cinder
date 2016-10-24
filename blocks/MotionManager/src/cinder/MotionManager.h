@@ -63,6 +63,7 @@ class MotionManager {
 	static bool		isGyroAvailable();
 	//! Returns whether you can depend on the -Z axis pointing towards north with getRotation and getRotationMatrix
 	static bool		isNorthReliable();
+    static bool isRotationVectorAvailable();
 	//! Enables the system calibration view which will appear when the device needs some motion to recalibrate.
 	static void		setShowsCalibrationView( bool shouldShow = true );
 

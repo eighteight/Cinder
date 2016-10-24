@@ -36,6 +36,7 @@ public:
 	bool 		isGyroAvailable() const;
 	bool 		isAccelAvailable() const;
 	bool 		isNorthReliable() const;
+    bool        isRotationVectorAvailable();
     void 		startMotionUpdates();
     void 		stopMotionUpdates();
 	void 		setSensorMode( MotionManager::SensorMode mode );
