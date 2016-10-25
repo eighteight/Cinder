@@ -31,29 +31,18 @@ using namespace ci::android::app;
 namespace cinder { namespace android { namespace hardware {
 
 jclass 		Vibrator::Java::ClassObject			= nullptr;
-jmethodID 	Vibrator::Java::hardware_vibrator_initialize = nullptr;
 jmethodID 	Vibrator::Java::create              = nullptr;
+jmethodID 	Vibrator::Java::vibrate              = nullptr;
 jmethodID 	Vibrator::Java::destroy				= nullptr;
-jmethodID 	Vibrator::Java::vibrate				= nullptr;
 jmethodID 	Vibrator::Java::stop				= nullptr;
 
 Vibrator::Vibrator(jobject obj)
 {
-    if(nullptr == obj) {
-        dbg_app_log("c'tor: Mark 2");
-        throw std::runtime_error( "parameter 'obj' is null (" + std::string( __PRETTY_FUNCTION__ ) + ")" );
-    }
-    
     mJavaObject = JniHelper::Get()->TrackedNewGlobalRef( obj );
     if( ! mJavaObject ) {
         throw std::runtime_error( "Error initializing mJavaObject (" + std::string( __PRETTY_FUNCTION__ ) + ")" );
     }
-    
-    std::stringstream ss;
-    ss << "Vibrator initialized" << std::endl;
-    dbg_app_log( ss.str() );
-    
-    //JniHelper::Get()->CallVoidMethod( mJavaObject->getObject());
+    JniHelper::Get()->CallVoidMethod( mJavaObject->getObject(), Java::create );
 }
 
 Vibrator::~Vibrator()
@@ -63,7 +52,7 @@ Vibrator::~Vibrator()
 
 VibratorRef Vibrator::create( )
 {
-    jobject obj = JniHelper::Get()->CallStaticObjectMethod( Java::ClassObject, Java::create);
+    jobject obj = ci::android::app::CinderNativeActivity::getJavaObject();
 	VibratorRef result = VibratorRef( new Vibrator( obj ) );
 	return result;
 }
@@ -80,13 +69,14 @@ void Vibrator::cacheJni()
             }
 
 			if( nullptr != javaClass ) {
-                Java::hardware_vibrator_initialize = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_initialize", "()V" );
-				Java::destroy				= JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_destroy", "()V" );
-				Java::vibrate				= JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_vibrate", "()V" );
-				Java::stop					= JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_stop", "()V" );
-				jni_obtained_check( Vibrator::Java::destroy );
-                jni_obtained_check( Vibrator::Java::vibrate );
+                Java::create  = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_initialize", "()V" );
+				Java::destroy = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_destroy", "()V" );
+				Java::vibrate = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_vibrate", "()V" );
+				Java::stop    = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_stop", "()V" );
+                jni_obtained_check( Vibrator::Java::create );
+                jni_obtained_check( Vibrator::Java::destroy );
 				jni_obtained_check( Vibrator::Java::stop );
+                jni_obtained_check( Vibrator::Java::vibrate );
 			}
 		}
 		catch( const std::exception& e ) {

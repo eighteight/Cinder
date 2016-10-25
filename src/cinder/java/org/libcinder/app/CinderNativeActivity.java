@@ -557,13 +557,13 @@ public class CinderNativeActivity extends NativeActivity {
             final ConditionVariable condition = new ConditionVariable(false);
             this.mHandler.post(new Runnable() {
                 public void run() {
-                    CinderNativeActivity.this.mVibrator.vibrate(7000);
+                    CinderNativeActivity.this.mVibrator.vibrate(1000);
                     condition.open();
                 }
             });
             condition.block();
         } else {
-            this.mVibrator.vibrate(7000);
+            this.mVibrator.vibrate(1000);
         }
     }
     
@@ -589,13 +589,13 @@ public class CinderNativeActivity extends NativeActivity {
             final ConditionVariable condition = new ConditionVariable(false);
             this.mHandler.post(new Runnable() {
                 public void run() {
-                    CinderNativeActivity.this.mVibrator.vibrate(7000);
+                    CinderNativeActivity.this.mVibrator.vibrate(1000);
                     condition.open();
                 }
             });
             condition.block();
         } else {
-            this.mVibrator.vibrate(7000);
+            this.mVibrator.vibrate(1000);
         }
     }
 }
