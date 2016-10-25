@@ -25,6 +25,7 @@
 #include "cinder/android/hardware/Camera.h"
 #include "cinder/android/net/UrlLoader.h"
 #include "cinder/android/video/VideoPlayer.h"
+#include "cinder/android/hardware/Vibrator.h"
 #include "cinder/android/AndroidDevLog.h"
 
 #include "cinder/audio/Context.h"
@@ -130,6 +131,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 	ci::android::hardware::Camera::cacheJni();
 	ci::android::net::UrlLoader::cacheJni();
 	ci::android::video::VideoPlayer::cacheJni();
+    ci::android::hardware::Vibrator::cacheJni();
 
 dbg_app_fn_exit( __PRETTY_FUNCTION__ );
 }

@@ -125,7 +125,7 @@ public class VideoPlayer implements SurfaceTexture.OnFrameAvailableListener, Med
 
         VideoPlayer result = null;
         try {
-            new VideoPlayer(new URL(url));
+            result = new VideoPlayer(new URL(url));
         }
         catch(Exception e) {
             Log.e(TAG, "createFromUrl failed: " + e.getMessage() + e.getStackTrace());

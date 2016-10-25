@@ -17,6 +17,7 @@ import android.os.ConditionVariable;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
@@ -512,5 +513,89 @@ public class CinderNativeActivity extends NativeActivity {
             Log.e(TAG, "hardware_camera_updateTexImage error:" + e.getMessage());
         }
         */
+    }
+    
+    // =============================================================================================
+    // Camera
+    // =============================================================================================
+    
+    private Vibrator mVibrator;
+    
+    /**
+     * hardware_vibrator_initialize
+     *
+     */
+    public void hardware_vibrator_initialize( ){
+        Log.i(TAG, "hardware_vibrator_initialize");
+        
+        if(null != mVibrator) {
+            return;
+        }
+        
+        if(1 != Thread.currentThread().getId()) {
+            final ConditionVariable condition = new ConditionVariable(false);
+            final CinderNativeActivity activity = this;
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mVibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+                    condition.open();
+                }
+            });
+            condition.block();
+        }
+        else {
+             mVibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+        }
+    }
+    
+
+    
+    public void hardware_vibrator_vibrate() {
+        Log.i("AugmentedTheatreActivity", "hardware_vibrator_startVibrate");
+        if(1L != Thread.currentThread().getId()) {
+            final ConditionVariable condition = new ConditionVariable(false);
+            this.mHandler.post(new Runnable() {
+                public void run() {
+                    CinderNativeActivity.this.mVibrator.vibrate(7000);
+                    condition.open();
+                }
+            });
+            condition.block();
+        } else {
+            this.mVibrator.vibrate(7000);
+        }
+    }
+    
+    public void hardware_vibrator_stop() {
+        Log.i("AugmentedTheatreActivity", "hardware_vibrator_startVibrate");
+        if(1L != Thread.currentThread().getId()) {
+            final ConditionVariable condition = new ConditionVariable(false);
+            this.mHandler.post(new Runnable() {
+                public void run() {
+                    CinderNativeActivity.this.mVibrator.vibrate(7000);
+                    condition.open();
+                }
+            });
+            condition.block();
+        } else {
+            this.mVibrator.vibrate(7000);
+        }
+    }
+    
+    public void hardware_vibrator_destroy() {
+        Log.i("AugmentedTheatreActivity", "hardware_vibrator_startVibrate");
+        if(1L != Thread.currentThread().getId()) {
+            final ConditionVariable condition = new ConditionVariable(false);
+            this.mHandler.post(new Runnable() {
+                public void run() {
+                    CinderNativeActivity.this.mVibrator.vibrate(7000);
+                    condition.open();
+                }
+            });
+            condition.block();
+        } else {
+            this.mVibrator.vibrate(7000);
+        }
     }
 }

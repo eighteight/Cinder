@@ -541,6 +541,7 @@ set( CINDER_CXX_SRC_FILES
     ${CINDER_SRC_DIR}/cinder/android/JniHelper.cpp
     ${CINDER_SRC_DIR}/cinder/android/LogCatStream.cpp
     ${CINDER_SRC_DIR}/cinder/android/hardware/Camera.cpp
+    ${CINDER_SRC_DIR}/cinder/android/hardware/Vibrator.cpp
     ${CINDER_SRC_DIR}/cinder/android/app/CinderNativeActivity.cpp
     ${CINDER_SRC_DIR}/cinder/android/app/ComponentManager.cpp
     ${CINDER_SRC_DIR}/cinder/android/net/UrlLoader.cpp
