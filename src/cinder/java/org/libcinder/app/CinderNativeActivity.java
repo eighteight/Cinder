@@ -352,7 +352,7 @@ public class CinderNativeActivity extends NativeActivity {
             mCamera.startCapture(deviceId, width, height);
         }
     }
-    public void hardware_camera_startTorch(final String deviceId, final int width, final int height) {
+    public void hardware_camera_startTorch(final String deviceId) {
         //public void hardware_camera_startCapture() {
         Log.i(TAG, "hardware_camera_startTorch");
         
@@ -367,14 +367,14 @@ public class CinderNativeActivity extends NativeActivity {
                 @Override
                 public void run() {
                     //mCamera = Camera.create(Build.VERSION_CODES.KITKAT, activity);
-                    mCamera.startTorch(deviceId, width, height);
+                    mCamera.startTorch(deviceId);
                     condition.open();
                 }
             });
             condition.block();
         }
         else {
-            mCamera.startTorch(deviceId, width, height);
+            mCamera.startTorch(deviceId);
         }
     }
 
@@ -528,7 +528,7 @@ public class CinderNativeActivity extends NativeActivity {
     public void hardware_vibrator_initialize( ){
         Log.i(TAG, "hardware_vibrator_initialize");
         
-        if(null != mVibrator) {
+        if (null != mVibrator) {
             return;
         }
         
@@ -551,51 +551,55 @@ public class CinderNativeActivity extends NativeActivity {
     
 
     
-    public void hardware_vibrator_vibrate() {
-        Log.i("AugmentedTheatreActivity", "hardware_vibrator_startVibrate");
+    public void hardware_vibrator_vibrate(final int millis) {
+        Log.i("AugmentedTheatreActivity", "hardware_vibrator_vibrate");
+        if (!this.mVibrator.hasVibrator()) return;
         if(1L != Thread.currentThread().getId()) {
             final ConditionVariable condition = new ConditionVariable(false);
             this.mHandler.post(new Runnable() {
                 public void run() {
-                    CinderNativeActivity.this.mVibrator.vibrate(1000);
+                    CinderNativeActivity.this.mVibrator.vibrate(millis);
                     condition.open();
                 }
             });
             condition.block();
         } else {
-            this.mVibrator.vibrate(1000);
+            this.mVibrator.vibrate(millis);
         }
     }
     
     public void hardware_vibrator_stop() {
-        Log.i("AugmentedTheatreActivity", "hardware_vibrator_startVibrate");
+        Log.i("AugmentedTheatreActivity", "hardware_vibrator_stop");
+        if (!this.mVibrator.hasVibrator()) return;
         if(1L != Thread.currentThread().getId()) {
             final ConditionVariable condition = new ConditionVariable(false);
             this.mHandler.post(new Runnable() {
                 public void run() {
-                    CinderNativeActivity.this.mVibrator.vibrate(7000);
+                    CinderNativeActivity.this.mVibrator.cancel();
                     condition.open();
                 }
             });
             condition.block();
         } else {
-            this.mVibrator.vibrate(7000);
+            this.mVibrator.cancel();
         }
     }
     
     public void hardware_vibrator_destroy() {
-        Log.i("AugmentedTheatreActivity", "hardware_vibrator_startVibrate");
+        Log.i("AugmentedTheatreActivity", "hardware_vibrator_destroy");
         if(1L != Thread.currentThread().getId()) {
             final ConditionVariable condition = new ConditionVariable(false);
             this.mHandler.post(new Runnable() {
                 public void run() {
-                    CinderNativeActivity.this.mVibrator.vibrate(1000);
+                    CinderNativeActivity.this.mVibrator.cancel();
+                    CinderNativeActivity.this.mVibrator = null;
                     condition.open();
                 }
             });
             condition.block();
         } else {
-            this.mVibrator.vibrate(1000);
+            this.mVibrator.cancel();
+            this.mVibrator = null;
         }
     }
 }

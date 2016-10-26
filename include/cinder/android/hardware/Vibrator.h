@@ -43,18 +43,16 @@ class Vibrator {
 public:
 
 	Vibrator( jobject obj );
-	virtual ~Vibrator();
+	virtual                 ~Vibrator();
 
-	static VibratorRef	create();
-
-	void 					vibrate();
+	static                  VibratorRef	create();
+	void 					vibrate(int);
 	void 					stop();
 
 private:
 	struct Java {
 		static jclassID		ClassName;
 		static jclass 		ClassObject;
-        static jmethodID    hardware_vibrator_initialize;
         static jmethodID 	create;
 		static jmethodID 	destroy;
 		static jmethodID 	vibrate;

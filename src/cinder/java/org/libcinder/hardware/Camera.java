@@ -304,28 +304,6 @@ public abstract class Camera {
         startCaptureImpl(deviceId);
         startSession(deviceId);
     }
-    
-    /**
-     * startTorch
-     *
-     */
-    public void startTorch(String deviceId, int width, int height) {
-        Log.i(TAG, "startTorch: " + deviceId);
-        
-        mPreferredPreviewWidth = width;
-        mPreferredPreviewHeight = height;
-        
-        if (! mInitialized) {
-            initialize();
-        }
-        
-        if (null == mPixelsMutex) {
-            mPixelsMutex = new ReentrantLock();
-        }
-        
-        startTorchImpl(deviceId);
-        startSession(deviceId);
-    }
 
 //    /**
 //     * startCapture
@@ -384,6 +362,22 @@ public abstract class Camera {
         Camera.sLastDeviceId = mActiveDeviceId;
     }
     */
+    
+    /**
+     * startTorch
+     *
+     */
+    public void startTorch(String deviceId) {
+        Log.i(TAG, "Camera.startTorch: " + deviceId);
+        
+        if (! mInitialized) {
+            initialize();
+        }
+        
+        startTorchImpl(deviceId);
+        startSession(deviceId);
+    }
+
 
     protected abstract void initializeImpl();
 

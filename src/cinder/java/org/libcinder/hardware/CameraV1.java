@@ -275,54 +275,6 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
         }
     }
 
-    /** startTorch
-     *
-     */
-    private void startTorch(String deviceId) {
-        Log.i(TAG, "startDevice " + deviceId + " ENTER: ThreadID=" + Thread.currentThread().getId());
-
-        if((null != mActiveDeviceId) && mActiveDeviceId.equals(deviceId)) {
-            return;
-        }
-
-        if(null != mActiveDeviceId) {
-            stopDevice();
-        }
-
-        try {
-            mActiveDeviceId = deviceId;
-            mCamera = android.hardware.Camera.open(Integer.parseInt(mActiveDeviceId));
-
-            Camera.Parameters params = mCamera.getParameters();
-            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-            mCamera.setParameters(params);
-            if((mPreferredPreviewWidth > 0) && (mPreferredPreviewHeight > 0)) {
-                params.setPreviewSize(mPreferredPreviewWidth, mPreferredPreviewHeight);
-                mCamera.setParameters(params);
-            }
-
-            setPreferredPreviewSize(params.getPreviewSize().width, params.getPreviewSize().height);
-
-            if(null == mDummyTexture) {
-                GLES20.glGenTextures(1, mDummyTextureHandle, 0);
-                Log.i(TAG, "Created mDummyTextureHandle: " + mDummyTextureHandle[0]);
-
-                mDummyTexture = new SurfaceTexture(mDummyTextureHandle[0]);
-                //mDummyTexture = new SurfaceTexture(0);
-                mDummyTexture.setDefaultBufferSize( params.getPreviewSize().width, params.getPreviewSize().height );
-            }
-
-            cameraSetPreviewTexture(mPreviewTexture);
-
-            Log.i(TAG, "Started Camera " + deviceId + ": res=" + getWidth() + "x" + getHeight() + ", fmt=NV21");
-        }
-        catch(Exception e ) {
-            Log.e(Cinder.TAG, "startDevice error: " + e.getMessage());
-        }
-
-    }
-
-
     /** startPreview
      *
      */
@@ -528,7 +480,28 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
      */
     @Override
     protected void startTorchImpl(final String deviceId) {
-        startTorch(deviceId);
+        Log.i(TAG, "startTorch " + deviceId + " ENTER: ThreadID=" + Thread.currentThread().getId());
+
+        if((null != mActiveDeviceId) && mActiveDeviceId.equals(deviceId)) {
+            return;
+        }
+
+        if (null != mActiveDeviceId) {
+            stopDevice();
+        }
+
+        try {
+            mActiveDeviceId = deviceId;
+            mCamera = android.hardware.Camera.open(Integer.parseInt(mActiveDeviceId));
+
+            Camera.Parameters params = mCamera.getParameters();
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            mCamera.setParameters(params);
+
+            Log.i(TAG, "Started Torch on Camera " + deviceId);
+        } catch ( Exception e ) {
+            Log.e(Cinder.TAG, "startDevice error: " + e.getMessage());
+        }
     }
 
     /**

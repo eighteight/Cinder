@@ -112,6 +112,7 @@ public:
 	void 						updateTexImage();
 
 	void						getPixels( Surface8u* outSurface ) const;
+    void                        startTorch( const std::string& deviceId);
 
 private:
 	struct Java {
@@ -119,6 +120,7 @@ private:
 		static jmethodID 		hardware_camera_initialize;
 		static jmethodID		hardware_camera_startCapture;
 		static jmethodID		hardware_camera_stopCapture;
+        static jmethodID        hardware_camera_startTorch;
 		static jmethodID 		hardware_camera_lockPixels;
 		static jmethodID 		hardware_camera_unlockPixels;
 		static jmethodID 		hardware_camera_isNewFrameAvailable;

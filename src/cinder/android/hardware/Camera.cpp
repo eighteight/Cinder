@@ -138,6 +138,7 @@ jmethodID 	Camera::Java::clearNewFrameAvailable	= nullptr;
 jmethodID Camera::Java::hardware_camera_initialize 				= nullptr;
 jmethodID Camera::Java::hardware_camera_enumerateDevices		= nullptr;
 jmethodID Camera::Java::hardware_camera_startCapture 			= nullptr;
+jmethodID Camera::Java::hardware_camera_startTorch              = nullptr;
 jmethodID Camera::Java::hardware_camera_stopCapture 			= nullptr;
 jmethodID Camera::Java::hardware_camera_lockPixels 				= nullptr;
 jmethodID Camera::Java::hardware_camera_unlockPixels 			= nullptr;
@@ -169,6 +170,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 				Java::hardware_camera_initialize 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_initialize", "(I)V" );
 				Java::hardware_camera_enumerateDevices 			= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_enumerateDevices", "()[Lorg/libcinder/hardware/Camera$DeviceInfo;" );
 				Java::hardware_camera_startCapture 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_startCapture", "(Ljava/lang/String;II)V" );
+                Java::hardware_camera_startTorch 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_startTorch", "(Ljava/lang/String;)V" );
 				Java::hardware_camera_stopCapture 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_stopCapture", "()V" );
 				Java::hardware_camera_lockPixels 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_lockPixels", "()[B" );
 				Java::hardware_camera_unlockPixels 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_unlockPixels", "()V" );
@@ -179,6 +181,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 				jni_obtained_check( Camera::Java::hardware_camera_enumerateDevices );
 				jni_obtained_check( Camera::Java::hardware_camera_initialize );
 				jni_obtained_check( Camera::Java::hardware_camera_startCapture );
+                jni_obtained_check( Camera::Java::hardware_camera_startTorch );
 				jni_obtained_check( Camera::Java::hardware_camera_stopCapture );
 				jni_obtained_check( Camera::Java::hardware_camera_lockPixels );
 				jni_obtained_check( Camera::Java::hardware_camera_unlockPixels );
@@ -231,6 +234,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 		Java::hardware_camera_initialize 				= nullptr;
 		Java::hardware_camera_enumerateDevices			= nullptr;
 		Java::hardware_camera_startCapture 				= nullptr;
+        Java::hardware_camera_startTorch 				= nullptr;
 		Java::hardware_camera_stopCapture 				= nullptr;
 		Java::hardware_camera_lockPixels 				= nullptr;
 		Java::hardware_camera_unlockPixels 				= nullptr;
@@ -352,6 +356,21 @@ void Camera::startCapture( const std::string& deviceId, int width, int height )
 	JniHelper::Get()->DeleteLocalRef( jstrDeviceId );
 
 	mCapturing = true;
+}
+    
+void Camera::startTorch( const std::string& deviceId)
+{
+    /*
+     jobject javaObject = ci::android::app::CinderNativeActivity::getJavaObject();
+     JniHelper::Get()->CallVoidMethod( javaObject, Java::hardware_camera_startTorch, (jint)mWidth, (jint)mHeight );
+     */
+    
+    jobject javaObject = ci::android::app::CinderNativeActivity::getJavaObject();
+    jstring jstrDeviceId = JniHelper::Get()->NewStringUTF( deviceId );
+    JniHelper::Get()->CallVoidMethod( javaObject, Java::hardware_camera_startTorch, jstrDeviceId);
+    JniHelper::Get()->DeleteLocalRef( jstrDeviceId );
+    
+    //mCapturing = true;
 }
 
 void Camera::stopCapture()

@@ -71,7 +71,7 @@ void Vibrator::cacheJni()
 			if( nullptr != javaClass ) {
                 Java::create  = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_initialize", "()V" );
 				Java::destroy = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_destroy", "()V" );
-				Java::vibrate = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_vibrate", "()V" );
+				Java::vibrate = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_vibrate", "(I)V" );
 				Java::stop    = JniHelper::Get()->GetMethodId( javaClass, "hardware_vibrator_stop", "()V" );
                 jni_obtained_check( Vibrator::Java::create );
                 jni_obtained_check( Vibrator::Java::destroy );
@@ -96,11 +96,9 @@ void Vibrator::destroyJni()
 	}
 }
 
-void Vibrator::vibrate()
+void Vibrator::vibrate(int millis)
 {
-	//if( ! isPlaying() ) {
-		JniHelper::Get()->CallVoidMethod( mJavaObject->getObject(), Java::vibrate );
-	//}
+    JniHelper::Get()->CallVoidMethod( mJavaObject->getObject(), Java::vibrate, (jint) millis );
 }
 
 void Vibrator::stop()
