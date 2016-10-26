@@ -225,8 +225,7 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
             mCamera = android.hardware.Camera.open(Integer.parseInt(mActiveDeviceId));
 
             Camera.Parameters params = mCamera.getParameters();
-            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-            mCamera.setParameters(params);
+
             if((mPreferredPreviewWidth > 0) && (mPreferredPreviewHeight > 0)) {
                 params.setPreviewSize(mPreferredPreviewWidth, mPreferredPreviewHeight);
                 mCamera.setParameters(params);
