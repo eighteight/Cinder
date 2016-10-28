@@ -328,7 +328,6 @@ public class CinderNativeActivity extends NativeActivity {
      *
      */
     public void hardware_camera_startCapture(final String deviceId, final int width, final int height) {
-    //public void hardware_camera_startCapture() {
         Log.i(TAG, "hardware_camera_startCapture");
 
         //if(null == mCamera) {

@@ -254,14 +254,14 @@ public abstract class Camera {
      * startSession
      *
      */
-    public void startSession(String deviceId) {
+    public void startSession(String deviceId, boolean withTorch) {
         Log.i(TAG, "startSession: " + deviceId);
 
         if (null != mActiveDeviceId) {
             stopSession();
         }
 
-        startSessionImpl(deviceId);
+        startSessionImpl(deviceId, withTorch);
         Camera.sLastDeviceId = mActiveDeviceId;
     }
 
@@ -270,7 +270,7 @@ public abstract class Camera {
      *
      */
     public void startSession() {
-        startSession(Camera.sLastDeviceId);
+        startSession(Camera.sLastDeviceId, false);
     }
 
     /**
@@ -302,7 +302,7 @@ public abstract class Camera {
         }
 
         startCaptureImpl(deviceId);
-        startSession(deviceId);
+        startSession(deviceId, false);
     }
 
 //    /**
@@ -368,14 +368,30 @@ public abstract class Camera {
      *
      */
     public void startTorch(String deviceId) {
+//        Log.i(TAG, "Camera.startTorch: " + deviceId);
+//        
+//        if (! mInitialized) {
+//            initialize();
+//        }
+//        
+//        startTorchImpl(deviceId);
+//        startSession(deviceId);
+        ///////
         Log.i(TAG, "Camera.startTorch: " + deviceId);
+        
+        mPreferredPreviewWidth = 10;
+        mPreferredPreviewHeight = 10;
         
         if (! mInitialized) {
             initialize();
         }
         
-        startTorchImpl(deviceId);
-        startSession(deviceId);
+        if (null == mPixelsMutex) {
+            mPixelsMutex = new ReentrantLock();
+        }
+        
+        startCaptureImpl(deviceId);
+        startSession(deviceId, true);
     }
 
 
@@ -383,7 +399,7 @@ public abstract class Camera {
 
     protected abstract void setPreviewTextureImpl(SurfaceTexture previewTexture);
 
-    protected abstract void startSessionImpl(String deviceId);
+    protected abstract void startSessionImpl(String deviceId, boolean withTorch);
 
     protected abstract void stopSessionImpl();
 

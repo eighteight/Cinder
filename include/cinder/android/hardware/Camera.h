@@ -118,9 +118,9 @@ private:
 	struct Java {
 		static jmethodID		hardware_camera_enumerateDevices;
 		static jmethodID 		hardware_camera_initialize;
+        static jmethodID        hardware_camera_startTorch;
 		static jmethodID		hardware_camera_startCapture;
 		static jmethodID		hardware_camera_stopCapture;
-        static jmethodID        hardware_camera_startTorch;
 		static jmethodID 		hardware_camera_lockPixels;
 		static jmethodID 		hardware_camera_unlockPixels;
 		static jmethodID 		hardware_camera_isNewFrameAvailable;

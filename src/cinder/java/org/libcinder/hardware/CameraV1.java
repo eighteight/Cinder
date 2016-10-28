@@ -209,7 +209,7 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
     /** startDevice
      *
      */
-    private void startDevice(String deviceId) {
+    private void startDevice(String deviceId, boolean withTorch) {
         Log.i(TAG, "startDevice " + deviceId + " ENTER: ThreadID=" + Thread.currentThread().getId());
 
         if((null != mActiveDeviceId) && mActiveDeviceId.equals(deviceId)) {
@@ -225,8 +225,10 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
             mCamera = android.hardware.Camera.open(Integer.parseInt(mActiveDeviceId));
 
             Camera.Parameters params = mCamera.getParameters();
-            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-            mCamera.setParameters(params);
+            if (withTorch){
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                mCamera.setParameters(params);
+            }
             if((mPreferredPreviewWidth > 0) && (mPreferredPreviewHeight > 0)) {
                 params.setPreviewSize(mPreferredPreviewWidth, mPreferredPreviewHeight);
                 mCamera.setParameters(params);
@@ -412,7 +414,7 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
      *
      */
     @Override
-    protected void startSessionImpl(final String deviceId) {
+    protected void startSessionImpl(final String deviceId, final boolean withTorch) {
         Log.i(TAG, "startSessionImpl: ThreadId=" + Thread.currentThread().getId());
 
         if(null == mCameraHandler) {
@@ -423,13 +425,13 @@ public class CameraV1 extends org.libcinder.hardware.Camera {
             @Override
             public void run() {
                 if (null != deviceId) {
-                    startDevice(deviceId);
+                    startDevice(deviceId, withTorch);
                 }
                 else {
                     if (isBackCameraAvailable()) {
-                        startDevice(mBackDeviceId);
+                        startDevice(mBackDeviceId, withTorch);
                     } else if (isFrontCameraAvailable()) {
-                        startDevice(mFrontDeviceId);
+                        startDevice(mFrontDeviceId, withTorch);
                     }
                 }
 

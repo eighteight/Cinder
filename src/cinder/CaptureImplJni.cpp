@@ -104,6 +104,15 @@ void CaptureImplJni::Device::start(int width, int height)
 	getNative()->startCapture( getUniqueId(), width, height );
 }
 
+void CaptureImplJni::Device::startTorch()
+{
+    if( ! getNative() ) {
+        return;
+    }
+    
+    getNative()->startTorch( getUniqueId() );
+}
+    
 void CaptureImplJni::Device::stop()
 {
 	if( ! getNative() ) {
@@ -191,6 +200,7 @@ void CaptureImplJni::start()
     
 void CaptureImplJni::startTorch()
 {
+    ci::app::console() << "Start torch: ]]]]]" << std::endl;
     //ci::android::hardware::Camera::getInstance()->startCapture( "0" );
     
     if( ! mDevice ) {
@@ -199,7 +209,7 @@ void CaptureImplJni::startTorch()
     
     auto fullDevice = std::dynamic_pointer_cast<CaptureImplJni::Device>( mDevice );
     if( fullDevice ) {
-        fullDevice->start(mWidth, mHeight);
+        fullDevice->startTorch();
         mCapturing = true;
     }
 }

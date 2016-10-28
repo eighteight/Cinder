@@ -22,6 +22,7 @@
 
 #include "cinder/Cinder.h"
 #include "cinder/Capture.h"
+#include "cinder/app/App.h"
 #if defined( CINDER_MAC ) || defined( CINDER_COCOA_TOUCH_DEVICE )
 	#import "cinder/CaptureImplAvFoundation.h"
 	typedef CaptureImplAvFoundation	CapturePlatformImpl;
@@ -91,19 +92,22 @@ Capture::~Capture()
 
 void Capture::start()
 {
+     ci::app::console() << "Start start:" << std::endl;
 #if defined( CINDER_COCOA )
 	[mImpl startCapture];
 #else
+    ci::app::console() << "Start start start:" << std::endl;
 	mImpl->start();
 #endif
 }
     
 void Capture::startTorch()
-    {
+{
 #if defined( CINDER_ANDROID )
-        mImpl->startTorch();
+    ci::app::console() << "CAPTURE::STARTTORCH"<<endl;
+    mImpl->startTorch();
 #endif
-    }
+}
 
 void Capture::stop()
 {

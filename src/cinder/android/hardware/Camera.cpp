@@ -169,9 +169,9 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 			if( nullptr != javaClass ) {
 				Java::hardware_camera_initialize 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_initialize", "(I)V" );
 				Java::hardware_camera_enumerateDevices 			= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_enumerateDevices", "()[Lorg/libcinder/hardware/Camera$DeviceInfo;" );
-				Java::hardware_camera_startCapture 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_startCapture", "(Ljava/lang/String;II)V" );
                 Java::hardware_camera_startTorch 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_startTorch", "(Ljava/lang/String;)V" );
-				Java::hardware_camera_stopCapture 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_stopCapture", "()V" );
+                Java::hardware_camera_startCapture 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_startCapture", "(Ljava/lang/String;II)V" );
+                Java::hardware_camera_stopCapture 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_stopCapture", "()V" );
 				Java::hardware_camera_lockPixels 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_lockPixels", "()[B" );
 				Java::hardware_camera_unlockPixels 				= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_unlockPixels", "()V" );
 				Java::hardware_camera_isNewFrameAvailable 		= JniHelper::Get()->GetMethodId( javaClass, "hardware_camera_isNewFrameAvailable", "()Z" );
@@ -344,6 +344,7 @@ void Camera::startCapture( const std::string& deviceId, int width, int height )
 {
 	mWidth = width;
 	mHeight = height;
+    ci::app::console() << "[[[[[[[Start capture: " << std::endl;
 
 	/*
 	jobject javaObject = ci::android::app::CinderNativeActivity::getJavaObject();
@@ -364,7 +365,7 @@ void Camera::startTorch( const std::string& deviceId)
      jobject javaObject = ci::android::app::CinderNativeActivity::getJavaObject();
      JniHelper::Get()->CallVoidMethod( javaObject, Java::hardware_camera_startTorch, (jint)mWidth, (jint)mHeight );
      */
-    
+        ci::app::console() << "[[[[[[[Start Torch: " << std::endl;
     jobject javaObject = ci::android::app::CinderNativeActivity::getJavaObject();
     jstring jstrDeviceId = JniHelper::Get()->NewStringUTF( deviceId );
     JniHelper::Get()->CallVoidMethod( javaObject, Java::hardware_camera_startTorch, jstrDeviceId);

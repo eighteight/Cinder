@@ -751,10 +751,10 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
     }
 
     /** startSessionImpl
-     *
+     *  TODO withTorch is not used
      */
     @Override
-    protected void startSessionImpl(String deviceId) {
+    protected void startSessionImpl(String deviceId, final boolean withTorch) {
         if(null != deviceId) {
             startDevice(deviceId);
         }
@@ -798,7 +798,7 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
         }
 
         startCameraThread();
-        startSession(deviceId);
+        startSession(deviceId, false);
     }
 
     /** stopCaptureImpl

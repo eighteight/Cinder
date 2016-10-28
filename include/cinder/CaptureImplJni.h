@@ -74,6 +74,7 @@ public:
 		const std::vector<ivec2>&			getSupportedResolutions() const { return mSupportedResolutions; }
 
 		void 								start(int width, int height);
+        void                                startTorch();
 		void 								stop();
 
 	private:
