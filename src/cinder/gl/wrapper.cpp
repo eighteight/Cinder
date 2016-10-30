@@ -166,11 +166,24 @@ std::pair<GLint,GLint> getVersion()
 #endif
 }
 
+std::string getString( GLenum name )
+{
+	const GLubyte* s = glGetString( name );
+	
+	if( s )
+		return std::string( reinterpret_cast<const char*>( s ) );
+	else
+		return std::string();
+}
+
 std::string getVersionString()
 {
-	const GLubyte* s = glGetString( GL_VERSION );
+	return getString( GL_VERSION );
+}
 
-	return std::string( reinterpret_cast<const char*>( s ) );
+std::string getVendorString()
+{
+	return getString( GL_VENDOR );
 }
 
 GlslProgRef& getStockShader( const class ShaderDef &shader )

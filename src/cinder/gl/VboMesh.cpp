@@ -157,8 +157,10 @@ void VboMeshGeomTarget::copyIndices( geom::Primitive primitive, const uint32_t *
 #endif
 
 	mVboMesh->mNumIndices = (uint32_t)numIndices;
-
-	if( requiredBytesPerIndex <= 2 ) {
+	if( mVboMesh->mNumIndices == 0 ) {
+		mVboMesh->mIndices.reset();
+	}
+	else if( requiredBytesPerIndex <= 2 ) {
 		mVboMesh->mIndexType = GL_UNSIGNED_SHORT;
 		std::unique_ptr<uint16_t[]> indices( new uint16_t[numIndices] );
 		copyIndexData( source, numIndices, indices.get() );
@@ -505,7 +507,7 @@ void VboMesh::buildVao( const GlslProg* shader, const AttribGlslMap &attributeMa
 
 void VboMesh::drawImpl( GLint first, GLsizei count )
 {
-	if( mNumIndices ) {
+	if( mIndices ) {
 		size_t firstByteOffset = first;
 		if( mIndexType == GL_UNSIGNED_INT ) firstByteOffset *= 4;
 		else if( mIndexType == GL_UNSIGNED_SHORT ) firstByteOffset *= 2;
@@ -519,7 +521,7 @@ void VboMesh::drawImpl( GLint first, GLsizei count )
 void VboMesh::drawInstancedImpl( GLsizei instanceCount )
 {
 	auto ctx = gl::context();
-	if( mNumIndices )
+	if( mIndices )
 		ctx->drawElementsInstanced( mGlPrimitive, mNumIndices, mIndexType, (GLvoid*)( 0 ), instanceCount );
 	else
 		ctx->drawArraysInstanced( mGlPrimitive, 0, mNumVertices, instanceCount );
