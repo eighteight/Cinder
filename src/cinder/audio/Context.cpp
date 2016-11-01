@@ -442,7 +442,7 @@ string Context::printGraphToString()
 }
 
 // ----------------------------------------------------------------------------------------------------
-// MARK: - ScopedEnableContext
+// ScopedEnableContext
 // ----------------------------------------------------------------------------------------------------
 
 ScopedEnableContext::ScopedEnableContext( Context *context )
