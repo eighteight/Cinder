@@ -42,6 +42,7 @@ jclassID	CinderNativeActivity::Java::ClassName				= "org/libcinder/app/CinderNat
 jclass  	CinderNativeActivity::Java::ClassObject 			= nullptr;
 jmethodID 	CinderNativeActivity::Java::getCacheDirectory		= nullptr;
 jmethodID	CinderNativeActivity::Java::getPicturesDirectory 	= nullptr;
+jmethodID	CinderNativeActivity::Java::getDocumentsDirectory 	= nullptr;
 jmethodID 	CinderNativeActivity::Java::setWallpaper			= nullptr;
 jmethodID 	CinderNativeActivity::Java::getDisplayRotation		= nullptr;
 jmethodID 	CinderNativeActivity::Java::setKeepScreenOn			= nullptr;
@@ -80,6 +81,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 			if( nullptr != Java::ClassObject ) {
 				Java::getCacheDirectory 	= JniHelper::Get()->GetMethodId( Java::ClassObject, "getCacheDirectory", "()Ljava/lang/String;" );
 				Java::getPicturesDirectory 	= JniHelper::Get()->GetMethodId( Java::ClassObject, "getPicturesDirectory", "()Ljava/lang/String;" );
+                Java::getDocumentsDirectory = JniHelper::Get()->GetMethodId( Java::ClassObject, "getDocumentsDirectory", "()Ljava/lang/String;" );
 				Java::setWallpaper			= JniHelper::Get()->GetMethodId( Java::ClassObject, "setWallpaper", "(Ljava/lang/String;)V" );
 				Java::getDisplayRotation 	= JniHelper::Get()->GetMethodId( Java::ClassObject, "getDisplayRotation", "()I" );
 				Java::setKeepScreenOn		= JniHelper::Get()->GetMethodId( Java::ClassObject, "setKeepScreenOn", "(Z)V" );
@@ -88,6 +90,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 				Java::launchTwitter			= JniHelper::Get()->GetMethodId( Java::ClassObject, "launchTwitter", "(Ljava/lang/String;Ljava/lang/String;)V" );
 				jni_obtained_check( CinderNativeActivity::Java::getCacheDirectory );
 				jni_obtained_check( CinderNativeActivity::Java::getPicturesDirectory );
+                jni_obtained_check( CinderNativeActivity::Java::getDocumentsDirectory );
 				jni_obtained_check( CinderNativeActivity::Java::setWallpaper );
 				jni_obtained_check( CinderNativeActivity::Java::getDisplayRotation );
 				jni_obtained_check( CinderNativeActivity::Java::setKeepScreenOn );
@@ -113,6 +116,7 @@ dbg_app_fn_enter( __PRETTY_FUNCTION__ );
 		Java::ClassObject			= nullptr;
 		Java::getCacheDirectory		= nullptr;
 		Java::getPicturesDirectory 	= nullptr;
+        Java::getDocumentsDirectory = nullptr;
 		Java::setWallpaper			= nullptr;
 		Java::getDisplayRotation	= nullptr;
 		Java::setKeepScreenOn		= nullptr;
@@ -192,6 +196,21 @@ cinder::fs::path CinderNativeActivity::getPicturesDirectory()
 	}
 
 	return result;
+}
+
+cinder::fs::path CinderNativeActivity::getDocumentsDirectory()
+{
+    cinder::fs::path result;
+    
+    auto jniEnv = JniHelper::Get()->AttachCurrentThread();
+    if( jniEnv ) {
+        jstring jstr = (jstring)jniEnv->CallObjectMethod( getInstance()->getJavaObject(), Java::getDocumentsDirectory );
+        const char * c_str = jniEnv->GetStringUTFChars( jstr, nullptr );
+        result = std::string( c_str );
+        jniEnv->ReleaseStringUTFChars( jstr, c_str );
+    }
+    
+    return result;
 }
 
 void CinderNativeActivity::setWallpaper( const Surface8u& surf )
