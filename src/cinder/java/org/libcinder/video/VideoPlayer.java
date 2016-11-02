@@ -10,6 +10,7 @@ import android.os.HandlerThread;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Surface;
+import java.io.IOException;
 
 import org.libcinder.app.CinderNativeActivity;
 
@@ -73,12 +74,19 @@ public class VideoPlayer implements SurfaceTexture.OnFrameAvailableListener, Med
     }
 
     private void initialize(String filePath) {
+
         initializeCommon();
+//        CinderNativeActivity.getInstance().getDocumentsDirectory();
         try {
             AssetManager am = CinderNativeActivity.getInstance().getAssets();
             AssetFileDescriptor afd = am.openFd(filePath);
-            mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            Log.e(TAG, "FILE DESCRIPTOR VALID: " + afd.getFileDescriptor().valid ());
+            mMediaPlayer.setDataSource(filePath);
+            //mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             mMediaPlayer.prepare();
+        }
+        catch (IOException e) {
+            Log.e(TAG, "IOException " + e.getMessage());
         }
         catch(Exception e) {
             Log.e(TAG, "VideoPlayer.initialize(String filePath) error: " + e.getMessage());
