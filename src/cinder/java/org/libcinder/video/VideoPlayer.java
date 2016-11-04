@@ -77,11 +77,12 @@ public class VideoPlayer implements SurfaceTexture.OnFrameAvailableListener, Med
     }
 
     private void initialize(String filePath) {
-        boolean isDoc = filePath.contains("Documents");
+
         initializeCommon();
 
         try {
-            if (isDoc) {
+            if (filePath.contains("Documents")) {
+                Context context = CinderNativeActivity.getInstance().getApplicationContext();
                 mMediaPlayer.setDataSource(context, Uri.parse(filePath));
             } else {
                 AssetManager am = CinderNativeActivity.getInstance().getAssets();
