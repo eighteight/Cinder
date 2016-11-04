@@ -4,6 +4,7 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -13,6 +14,8 @@ import android.view.Surface;
 import java.io.IOException;
 
 import org.libcinder.app.CinderNativeActivity;
+import android.os.Environment;
+import android.content.Context;
 
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -74,15 +77,17 @@ public class VideoPlayer implements SurfaceTexture.OnFrameAvailableListener, Med
     }
 
     private void initialize(String filePath) {
-
+        boolean isDoc = filePath.contains("Documents");
         initializeCommon();
-//        CinderNativeActivity.getInstance().getDocumentsDirectory();
+
         try {
-            AssetManager am = CinderNativeActivity.getInstance().getAssets();
-            AssetFileDescriptor afd = am.openFd(filePath);
-            Log.e(TAG, "FILE DESCRIPTOR VALID: " + afd.getFileDescriptor().valid ());
-            mMediaPlayer.setDataSource(filePath);
-            //mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            if (isDoc) {
+                mMediaPlayer.setDataSource(context, Uri.parse(filePath));
+            } else {
+                AssetManager am = CinderNativeActivity.getInstance().getAssets();
+                AssetFileDescriptor afd = am.openFd(filePath);
+                mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            }
             mMediaPlayer.prepare();
         }
         catch (IOException e) {
@@ -91,6 +96,7 @@ public class VideoPlayer implements SurfaceTexture.OnFrameAvailableListener, Med
         catch(Exception e) {
             Log.e(TAG, "VideoPlayer.initialize(String filePath) error: " + e.getMessage());
         }
+
         if( null != mMediaPlayer ) {
             mMediaPlayer.setOnCompletionListener(this);
         }
