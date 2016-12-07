@@ -67,6 +67,7 @@ public:
 	void 					play();
 	void 					stop();
 	void 					pause();
+    void                    setVolume(float vol);
 
 	ci::gl::Texture2dRef	getTexture() const;
 

@@ -82,5 +82,10 @@ bool MovieGl::isDone() const
 {
 	return mVideoPlayer->isDone();
 }
+    
+void MovieGl::setVolume(float vol)
+{
+    mVideoPlayer->setVolume(vol);
+}
 
 }}} // namespace cinder::android::video

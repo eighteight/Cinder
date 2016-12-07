@@ -281,6 +281,11 @@ ci::gl::Texture2dRef VideoPlayer::getTexture() const
 	}
 	return mCurrentTexture;
 }
+    
+void VideoPlayer::setVolume( float vol )
+{
+    JniHelper::Get()->CallVoidMethod( mJavaObject->getObject(), Java::setVolume, (jfloat)vol );
+}
 
 
 }}} // namespace cinder::android::video

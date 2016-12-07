@@ -84,6 +84,8 @@ public:
 	bool					isDone() const;	
 
 	const gl::TextureRef	getTexture() { return mVideoPlayer->getTexture(); }
+    
+    void                    setVolume(float vol);
 
 private:
 	MovieGl( const ci::fs::path &path );
