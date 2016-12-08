@@ -1042,7 +1042,9 @@ const GlslProg::Uniform* GlslProg::findUniform( const std::string &name, int *re
 	// first check if there is an exact name match with mUniforms and simply return it if we find one
 	for( const auto & uniform : mUniforms ) {
 		if( uniform.mName == name ) {
-			*resultLocation = uniform.mLoc;
+			if( resultLocation ) {
+				*resultLocation = uniform.mLoc;
+			}
 			return &uniform;
 		}
 	}
@@ -1090,7 +1092,7 @@ const GlslProg::Uniform* GlslProg::findUniform( const std::string &name, int *re
 		}
 	}
 
-	if( resultUniform ) {
+	if( resultLocation && resultUniform ) {
 		if( needsLocationOffset ) {
 			CI_ASSERT( requestedNameLeftSquareBracket != string::npos && requestedNameRightSquareBracket != string::npos );
 
@@ -1185,7 +1187,7 @@ const GlslProg::UniformBlock* GlslProg::findUniformBlock( const std::string &nam
 	return ret;
 }
 
-void GlslProg::uniformBlock( int loc, int binding )
+void GlslProg::uniformBlock( int loc, int binding ) const
 {
 	auto found = find_if( mUniformBlocks.begin(), mUniformBlocks.end(),
 						 [loc]( const UniformBlock &block ) {
@@ -1203,7 +1205,7 @@ void GlslProg::uniformBlock( int loc, int binding )
 	}
 }
 
-void GlslProg::uniformBlock( const std::string &name, GLint binding )
+void GlslProg::uniformBlock( const std::string &name, GLint binding ) const
 {
 	auto found = findUniformBlock( name );
 	if( found ) {
