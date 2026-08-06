@@ -173,7 +173,8 @@ public class CinderNativeActivity extends NativeActivity {
     }
     
     public String getDocumentsDirectory() {
-        String result = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).toString();
+        // App-specific dir: readable/writable without storage permissions under scoped storage
+        String result = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString();
         return result;
     }
 

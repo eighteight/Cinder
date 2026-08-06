@@ -29,6 +29,8 @@
 #include <cstdlib>
 #include <sstream>
 
+// gnustl lacked stoi/to_string; libc++ provides them, so only define for gnustl
+#if !defined(_LIBCPP_VERSION)
 int stoi( const std::string& str )
 {
     return strtol( str.c_str(), nullptr, 10 );
@@ -64,6 +66,7 @@ std::string to_string( long double value )
 { std::stringstream ss; ss << value; return ss.str(); }
 
 } // namespace std
+#endif // !defined(_LIBCPP_VERSION)
 
 namespace cinder { namespace android {
 

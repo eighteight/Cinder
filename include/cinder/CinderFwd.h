@@ -22,7 +22,7 @@
 
 #pragma once
 
-#if defined( CINDER_ANDROID )
+#if defined( CINDER_ANDROID ) && !defined( _LIBCPP_VERSION )
 
 int stoi( const std::string& str );
 
@@ -40,4 +40,4 @@ std::string to_string( long double value );
 
 } // namespace std
 
-#endif // defined( CINDER_ANDROID )
+#endif // defined( CINDER_ANDROID ) && !defined( _LIBCPP_VERSION )

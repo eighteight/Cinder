@@ -26,6 +26,8 @@
 #include "cinder/Filesystem.h"
 #include "cinder/Surface.h"
 
+// gnustl lacked stoi/to_string; libc++ provides them, so only declare for gnustl
+#if !defined(_LIBCPP_VERSION)
 int stoi( const std::string& str );
 
 namespace std {
@@ -41,6 +43,7 @@ std::string to_string( double value );
 std::string to_string( long double value );
 
 } // namespace std
+#endif
 
 namespace cinder { namespace android {
 
