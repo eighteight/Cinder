@@ -39,12 +39,14 @@ using namespace ci::android;
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "cinder", __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR,"cinder", __VA_ARGS__))
 
-// Extension
+// Extension: modern NDK sensor.h already defines these
+#if __ANDROID_API__ < 21 && !defined(ASENSOR_TYPE_GRAVITY)
 enum {
 	ASENSOR_TYPE_GRAVITY 				= 9,
 	ASENSOR_TYPE_ROTATION_VECTOR		= 11,
-	ASENSOR_TYPE_GAME_ROTATION_VECTOR	= 15 
+	ASENSOR_TYPE_GAME_ROTATION_VECTOR	= 15
 };
+#endif
 
 namespace cinder { namespace app { 
 
@@ -704,7 +706,12 @@ dbg_app_log( "Starting Event Loop" );
 			// If not running, we will block forever waiting for events.
 			// If animating, we loop until all events are read, then continue
 			// to draw the next frame of animation.
-			while( ( ident = ALooper_pollAll( 0, nullptr, &events, (void**)&source ) ) >= 0 ) {
+			// NDK 28 removed ALooper_pollAll; pollOnce is equivalent here since no
+			// looper callbacks are registered (ident-based sources only)
+			while( ( ident = ALooper_pollOnce( 0, nullptr, &events, (void**)&source ) ) >= 0 || ident == ALOOPER_POLL_CALLBACK ) {
+				if( ident < 0 ) {
+					continue;
+				}
 				// Process this event
 				if( nullptr != source ) {
 					source->process( mNativeApp, source );
