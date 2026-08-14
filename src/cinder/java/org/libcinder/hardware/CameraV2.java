@@ -23,6 +23,8 @@ import android.util.Size;
 import android.view.Surface;
 
 import java.nio.ByteBuffer;
+
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,39 +75,72 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
-            lockPixels();
+            // The native side reads mPixels as NV21 — all of Y, then
+            // interleaved VU (see ConvertYUV2RGB in hardware/Camera.cpp).
+            // YUV_420_888 arrives as three planes with their own row and
+            // pixel strides, so the frame is repacked here rather than
+            // assumed contiguous. The image is closed each time; the reader
+            // stays open — it is the session's output for as long as the
+            // capture runs. (This body was dead code for years, and with it
+            // every camera effect on Camera2 devices: nothing ever set
+            // mNewFrameAvailable, so no frame was ever fetched.)
+            Image image = null;
             try {
-                Image image = reader.acquireLatestImage();
-                if ((null != image) && (image.getPlanes().length > 0)) {
-                    /*
-                    //Log.i(TAG, "Number of planes:" + image.getPlanes().length);
-
-                    //ByteBuffer buf0 = image.getPlanes()[0].getBuffer();
-                    //ByteBuffer buf1 = image.getPlanes()[1].getBuffer();
-                    //ByteBuffer buf2 = image.getPlanes()[2].getBuffer();
-                    //Log.i(TAG, "...plane[0] size:" + buf0.remaining());
-                    //Log.i(TAG, "...plane[1] size:" + buf1.remaining());
-                    //Log.i(TAG, "...plane[2] size:" + buf2.remaining());
-
-                    ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-
-                    if ((null == mPixels) || (mPixels.length != buffer.remaining())) {
-                        mPixels = new byte[buffer.remaining()];
-                    }
-                    buffer.get(mPixels);
-
-                    image.close();
-                    image = null;
-
-                    mNewFrameAvailable.set(true);
-                    */
+                image = reader.acquireLatestImage();
+                if ((null == image) || (image.getPlanes().length < 3)) {
+                    return;
                 }
+                final int w = image.getWidth();
+                final int h = image.getHeight();
+                final Image.Plane yPlane = image.getPlanes()[0];
+                final Image.Plane uPlane = image.getPlanes()[1];
+                final Image.Plane vPlane = image.getPlanes()[2];
+                final ByteBuffer yBuf = yPlane.getBuffer();
+                final ByteBuffer uBuf = uPlane.getBuffer();
+                final ByteBuffer vBuf = vPlane.getBuffer();
+
+                lockPixels();
+                try {
+                    final int size = w * h + (w * h) / 2;
+                    if ((null == mPixels) || (mPixels.length != size)) {
+                        mPixels = new byte[size];
+                    }
+
+                    final int yRowStride = yPlane.getRowStride();
+                    if (yRowStride == w) {
+                        yBuf.position(0);
+                        yBuf.get(mPixels, 0, w * h);
+                    } else {
+                        for (int row = 0; row < h; ++row) {
+                            yBuf.position(row * yRowStride);
+                            yBuf.get(mPixels, row * w, w);
+                        }
+                    }
+
+                    final int uRowStride = uPlane.getRowStride();
+                    final int uPixStride = uPlane.getPixelStride();
+                    final int vRowStride = vPlane.getRowStride();
+                    final int vPixStride = vPlane.getPixelStride();
+                    int dst = w * h;
+                    for (int row = 0; row < h / 2; ++row) {
+                        for (int col = 0; col < w / 2; ++col) {
+                            mPixels[dst++] = vBuf.get(row * vRowStride + col * vPixStride);
+                            mPixels[dst++] = uBuf.get(row * uRowStride + col * uPixStride);
+                        }
+                    }
+                }
+                finally {
+                    unlockPixels();
+                }
+                mNewFrameAvailable.set(true);
+            }
+            catch (Exception e) {
+                Log.w(TAG, "onImageAvailable: " + e.getMessage());
             }
             finally {
-                unlockPixels();
-
-                reader.close();
-                reader = null;
+                if (null != image) {
+                    image.close();
+                }
             }
         }
     };
