@@ -395,7 +395,11 @@ public class CinderNativeActivity extends NativeActivity {
         }
 
         mCamera.stopCapture();
-        mCamera = null;
+        // Deliberately NOT nulled: the next startCapture posts
+        // mCamera.startCapture(...) onto the main thread, and a null here
+        // turned that into a main-thread NPE (with the GL thread blocked
+        // forever on its ConditionVariable). Camera.startCapture
+        // re-initializes a stopped instance by itself.
 
         /*
         if(1 != Thread.currentThread().getId()) {

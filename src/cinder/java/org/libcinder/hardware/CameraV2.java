@@ -798,7 +798,12 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
         }
 
         startCameraThread();
-        startSession(deviceId, false);
+        // NOTE: no startSession here. Camera.startCapture issues the session
+        // start itself right after this returns; doing it here as well opened
+        // the device twice in a row, and the second pass's defensive stop
+        // closed the device the first pass was still opening — the capture
+        // session then died on a null device and the camera stayed black
+        // (CameraV1.startCaptureImpl has never started the session either).
     }
 
     /** stopCaptureImpl
