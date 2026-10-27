@@ -49,6 +49,25 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
     private CameraDevice mCamera = null;
 
     private static int MAX_WAIT_TIME_MS = 10000;
+    /** How long a stop may wait for the camera lock.
+     *
+     *  Deliberately far below MAX_WAIT_TIME_MS, and below the five seconds
+     *  Android allows a window to answer an input event: stopDevice runs on
+     *  the native activity's own thread, which is the thread that dispatches
+     *  input, so a stop that waits longer than that is a stop that gets the
+     *  process killed. Closing a camera is not worth waiting seconds for.
+     *
+     *  Small, because these waits are serial: a look that opened the camera
+     *  twice tears down twice, and the app has only a short grace period
+     *  after it goes to the background in which it may still start its
+     *  foreground service. Two seconds of camera teardown spent that grace,
+     *  and the handset went deaf instead of listening on from the service.
+     *
+     *  On real hardware none of this should ever fire -- a capture session
+     *  is created in about a tenth of a second and the lock is free by the
+     *  time a stop asks for it. It fires on the emulator, whose virtual
+     *  camera never finishes creating one at all. */
+    private static int STOP_WAIT_TIME_MS = 150;
 
     private HandlerThread mCameraHandlerThread;
     private Handler mCameraHandler;
@@ -437,7 +456,16 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
                 flushCameraHandler();
 
                 mCameraHandlerThread.quitSafely();
-                mCameraHandlerThread.join();
+                // Bounded for the same reason, and quitSafely cannot help
+                // here: it stops the looper taking new work, it cannot
+                // interrupt a runnable already blocked inside the camera
+                // lock. The references are dropped either way -- a thread
+                // that is still finishing will exit on its own, and the next
+                // start builds a fresh one.
+                mCameraHandlerThread.join(STOP_WAIT_TIME_MS);
+                if (mCameraHandlerThread.isAlive()) {
+                    Log.w(TAG, "stopCameraThread: the camera thread is still finishing, letting it go");
+                }
                 mCameraHandlerThread = null;
                 mCameraHandler = null;
             }
@@ -584,8 +612,23 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
     private void stopDevice() {
         Log.i(TAG, "stopDevice ENTER");
 
+        // Bounded, the way startDevice's acquire already is. An unbounded
+        // acquire here deadlocks whenever the capture session is still being
+        // created: cameraThreadFn_createCaptureSession holds this same
+        // semaphore and only releases it when the session callback arrives,
+        // so stopping a camera look sooner than that waited for ever. The
+        // camera thread never finished, and the next time the app went to
+        // the background the system killed it for not answering input.
+        boolean locked = false;
         try {
-            mCameraOpenCloseLock.acquire();
+            locked = mCameraOpenCloseLock.tryAcquire(STOP_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
+            if(! locked) {
+                // Closing without the lock is worse than closing with it and
+                // better than not closing at all: the camera is going away
+                // either way, and a device left open is a device the next
+                // look cannot have.
+                Log.w(TAG, "stopDevice: timed out acquiring the camera lock, closing anyway");
+            }
 
             mActiveDeviceId = null;
 
@@ -598,7 +641,12 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
             Log.e(TAG, "stopDevice error: " + e.getMessage());
         }
         finally {
-            mCameraOpenCloseLock.release();
+            // Only what we took. The old code released unconditionally, so an
+            // acquire that threw handed back a permit it never held and left
+            // the semaphore counting up.
+            if(locked) {
+                mCameraOpenCloseLock.release();
+            }
         }
 
         /*
@@ -632,8 +680,20 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
                     }
                 });
 
-                while (!mPingBack.get()) {
+                // Bounded. This waits for a runnable to come back round the
+                // camera thread, and that thread can be sitting inside
+                // createCaptureSession holding the camera lock -- in which
+                // case the runnable never runs and this span for ever. It is
+                // called from stopCameraThread, on the native activity's own
+                // thread, which is the thread that dispatches input: waiting
+                // here longer than Android's five seconds gets the process
+                // killed for not answering.
+                final long deadline = System.currentTimeMillis() + STOP_WAIT_TIME_MS;
+                while (!mPingBack.get() && System.currentTimeMillis() < deadline) {
                     Thread.sleep(1);
+                }
+                if (!mPingBack.get()) {
+                    Log.w(TAG, "flushCameraHandler: the camera thread did not answer, carrying on");
                 }
                 mCameraHandler.removeCallbacksAndMessages(null);
             }
