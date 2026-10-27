@@ -1441,8 +1441,18 @@ void ReceiverTcp::Connection::read()
 			std::lock_guard<std::mutex> lock( receiver->mConnectionErrorFnMutex );
 			if( receiver->mConnectionErrorFn )
 				receiver->mConnectionErrorFn( error, mIdentifier );
-			else
-				CI_LOG_E( error.message() << ", didn't receive message from " << mSocket->remote_endpoint().address().to_string() );
+			else {
+				// remote_endpoint() throws on a closed socket, and this branch
+				// IS the closed-socket branch: closing the receiver completes
+				// every pending read with "Operation aborted". Throwing from an
+				// asio handler is std::terminate, so the app aborted every time
+				// it backgrounded with a cue stream open.
+				asio::error_code peer;
+				const auto where = mSocket->remote_endpoint( peer );
+				CI_LOG_E( error.message() << ", didn't receive message from "
+						  << ( peer ? std::string( "a peer that has gone" )
+								    : where.address().to_string() ) );
+			}
 			receiver->closeConnection( mIdentifier );
 		}
 		else {
@@ -1463,7 +1473,10 @@ void ReceiverTcp::Connection::read()
 				dataSize = data->size() - 4;
 			}
 			
-			receiver->dispatchMethods( dataPtr, dataSize, mSocket->remote_endpoint().address() );
+			asio::error_code peer;
+			const auto where = mSocket->remote_endpoint( peer );
+			if( ! peer )
+				receiver->dispatchMethods( dataPtr, dataSize, where.address() );
 			
 			read();
 		}
@@ -1545,7 +1558,8 @@ void ReceiverTcp::accept( OnAcceptErrorFn onAcceptErrorFn, OnAcceptFn onAcceptFn
 		}
 		else {
 			if( onAcceptErrorFn ) {
-				auto endpoint = socket->remote_endpoint();
+				asio::error_code peer;
+				const auto endpoint = socket->remote_endpoint( peer );
 				if( ! onAcceptErrorFn( error, endpoint ) )
 					return;
 			}
@@ -1584,8 +1598,15 @@ void ReceiverTcp::closeImpl()
 	// connection error and attempting to close the connection on error through
 	// the closeConnection function. This blocks against that ability. Basically,
 	// if we're shutting down we disregard the closeConnection function.
-	mIsShuttingDown.store( true );
+	// The acceptor goes first, and only then the flag: closeAcceptor() returns
+	// early when mIsShuttingDown is already set, so setting it beforehand meant
+	// close() never released the listening socket at all. The port stayed bound
+	// for the life of the process, and anything that tried to take it over --
+	// on Android, the foreground service that listens while the app is away --
+	// got EADDRINUSE. The flag exists to stop a connection's error handler
+	// re-entering through closeConnection(), which is below this line.
 	closeAcceptor();
+	mIsShuttingDown.store( true );
 	std::lock_guard<std::mutex> lock( mConnectionMutex );
 	for( auto & connection : mConnections )
 		connection->shutdown( socket_base::shutdown_both );
