@@ -40,7 +40,12 @@ public abstract class Camera {
     private int mWidth = 0;
     private int mHeight = 0;
     protected byte[] mPixels = null;
-    protected ReentrantLock mPixelsMutex = null;
+    // One lock for the life of the object, never replaced. stopCapture used to
+    // null it and startCapture made a new one, so a camera thread still
+    // finishing a frame from the previous capture locked one mutex while the
+    // GL thread reading pixels for the next capture locked another -- no
+    // exclusion at all across a camera switch (/camera/1 -> /camera/2).
+    protected final ReentrantLock mPixelsMutex = new ReentrantLock();
 
     protected OrientationEventListener mOrientationListener = null;
     protected int mOrientation = -1;
@@ -297,10 +302,6 @@ public abstract class Camera {
             initialize();
         }
 
-        if (null == mPixelsMutex) {
-            mPixelsMutex = new ReentrantLock();
-        }
-
         startCaptureImpl(deviceId);
         startSession(deviceId, false);
     }
@@ -343,8 +344,14 @@ public abstract class Camera {
         mPreferredPreviewHeight = 0;
         mWidth = 0;
         mHeight = 0;
-        mPixels = null;
-        mPixelsMutex = null;
+        mPixelsMutex.lock();
+        try {
+            mPixels = null;
+        }
+        finally {
+            mPixelsMutex.unlock();
+        }
+        mNewFrameAvailable.set(false);
         mOrientation = -1;
         mDisplayRotation = -1;
         mDisplayLayoutListener = null;
@@ -384,10 +391,6 @@ public abstract class Camera {
         
         if (! mInitialized) {
             initialize();
-        }
-        
-        if (null == mPixelsMutex) {
-            mPixelsMutex = new ReentrantLock();
         }
         
         startCaptureImpl(deviceId);

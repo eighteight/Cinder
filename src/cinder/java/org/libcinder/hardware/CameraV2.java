@@ -109,8 +109,20 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
                 if ((null == image) || (image.getPlanes().length < 3)) {
                     return;
                 }
+                // A reader from a capture that has already been stopped can
+                // still deliver for as long as its camera thread finishes
+                // (stopCameraThread lets a slow one go). Its frames are the
+                // wrong camera and, across a back/front switch, the wrong
+                // size: the native side converts getWidth()*getHeight()
+                // pixels out of mPixels and never checks the array's length.
+                if (reader != mImageReader) {
+                    return;
+                }
                 final int w = image.getWidth();
                 final int h = image.getHeight();
+                if ((w != getWidth()) || (h != getHeight())) {
+                    return;
+                }
                 final Image.Plane yPlane = image.getPlanes()[0];
                 final Image.Plane uPlane = image.getPlanes()[1];
                 final Image.Plane vPlane = image.getPlanes()[2];
@@ -359,8 +371,20 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
 
                     @Override
                     public void onConfigureFailed(CameraCaptureSession session) {
+                        // Logged, never thrown. This callback runs on the
+                        // camera thread with nothing above it to catch, so a
+                        // throw here ends the process. Configuration fails as
+                        // a matter of course when the device is closed while
+                        // the session is still being built -- a camera look
+                        // replaced within ~100ms, /camera/1 then /camera/2.
                         String config = "(res:" + getWidth() + "x" + getHeight() + ", fmt:" + Camera.imageFormatString(mPreviewImageFormat) + ")";
-                        throw new RuntimeException("Unable to create capture session using current configuration " + config);
+                        Log.w(TAG, "Unable to create capture session using current configuration " + config);
+                        mPreviewCaptureSessionCreated.set(false);
+                        try {
+                            session.close();
+                        } catch (Exception e) {
+                            Log.w(TAG, "onConfigureFailed: closing the session: " + e.getMessage());
+                        }
                     }
                 },
                 null
@@ -513,8 +537,16 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
             return;
         }
 
+        // Bounded like stopDevice, and for the same reason: this runs on the
+        // native activity's thread, and an unbounded acquire here was the one
+        // wait 5ad8677ff missed. It only arises once a session exists, so the
+        // lock is normally free; if it is not, close the session anyway.
+        boolean locked = false;
         try {
-            mCameraOpenCloseLock.acquire();
+            locked = mCameraOpenCloseLock.tryAcquire(STOP_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
+            if(! locked) {
+                Log.w(TAG, "stopPreview: timed out acquiring the camera lock, closing anyway");
+            }
 
             if(null != mPreviewCaptureSession) {
                 mPreviewCaptureSession.abortCaptures();
@@ -530,7 +562,9 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
             Log.e(TAG, "stopPreview error: " + e.getMessage());
         }
         finally {
-            mCameraOpenCloseLock.release();
+            if(locked) {
+                mCameraOpenCloseLock.release();
+            }
         }
 
         /*
@@ -648,6 +682,26 @@ public class CameraV2 extends org.libcinder.hardware.Camera {
                 mCameraOpenCloseLock.release();
             }
         }
+
+        // The reader was never closed: every capture leaked one, with its
+        // listener still attached to a camera thread that might not have
+        // finished. CameraDevice.close() returns once the device has stopped
+        // sending to its outputs, so the reader can go now. Detaching first
+        // and nulling mImageReader is what makes onImageAvailable drop any
+        // frame already queued on the old thread.
+        try {
+            final ImageReader reader = mImageReader;
+            mImageReader = null;
+            mImageReaderSurface = null;
+            if(null != reader) {
+                reader.setOnImageAvailableListener(null, null);
+                reader.close();
+            }
+        }
+        catch(Exception e) {
+            Log.e(TAG, "stopDevice: closing the image reader: " + e.getMessage());
+        }
+        mNewFrameAvailable.set(false);
 
         /*
         try {

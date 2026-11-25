@@ -180,7 +180,17 @@ CaptureImplJni::~CaptureImplJni()
 	CaptureImplJni::sDevicesEnumerated = false;
 	CaptureImplJni::sDevices.clear();
 
-	ci::android::hardware::Camera::destroyInstance();
+	// NOT Camera::destroyInstance(). Every Device, including the ones an app
+	// keeps (its back and front device refs) and the one the NEXT Capture was
+	// just built with, holds a raw pointer to the Camera singleton. Destroying
+	// it here meant that replacing one capture with another --
+	//     mCapture->stop(); mCapture = Capture::create( w, h, device );
+	// which runs this destructor after the new Capture exists -- left every
+	// Device pointing at freed memory. start() and getPixels() then ran on it,
+	// and getPixels converted a garbage width*height and died with SIGSEGV
+	// about half the time (24-25 Nov 2026, /camera/1 /camera/2 /rain/1 on a
+	// handset). The singleton now lives until the platform tears down
+	// (PlatformAndroid's destructor still destroys it).
 }
 
 void CaptureImplJni::start()
